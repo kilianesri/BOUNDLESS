@@ -3,56 +3,22 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>BOUNDLESS — Fase 0</title>
-  <style>
-    :root { color-scheme: dark; }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background: radial-gradient(circle at 50% 30%, #1a1f3a, #0a0c18 70%);
-      color: #f5f5f7;
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      padding: 2rem;
-    }
-    .card {
-      max-width: 640px;
-      background: rgba(255,255,255,0.04);
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 24px;
-      padding: 3rem 2.5rem;
-      backdrop-filter: blur(12px);
-    }
-    h1 {
-      font-size: clamp(2.5rem, 8vw, 4rem);
-      letter-spacing: 0.08em;
-      background: linear-gradient(90deg, #7c9cff, #b78cff);
-      -webkit-background-clip: text;
-      background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-    p { margin-top: 1rem; opacity: 0.75; line-height: 1.6; }
-    .badge {
-      display: inline-block;
-      margin-top: 2rem;
-      padding: 0.5rem 1.25rem;
-      border-radius: 999px;
-      background: rgba(124,156,255,0.15);
-      border: 1px solid rgba(124,156,255,0.3);
-      font-size: 0.85rem;
-      letter-spacing: 0.05em;
-    }
-  </style>
+  <meta name="description" content="BOUNDLESS — CRM/ERP de viatges familiars al Marroc (demo en mode test, dades fictícies)." />
+  <title>BOUNDLESS — CRM (demo)</title>
+
+  <!-- Identitat visual: Fraunces (títols) + Outfit (cos) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="assets/css/styles.css" />
 </head>
 <body>
-  <main class="card">
-    <h1>BOUNDLESS</h1>
-    <p>Pàgina temporal de la <strong>Fase 0</strong>. El pipeline de desplegament automàtic (GitHub → Netlify) està actiu.</p>
-    <p>Aquesta pàgina se substituirà pel prototip real un cop el fitxer estigui disponible.</p>
-    <span class="badge">Desplegament de prova · v2 — actualitzat automàticament ✅</span>
-  </main>
+  <div id="app"></div>
+  <div class="demo-flag">Demo</div>
+
+  <script src="assets/js/economy.js"></script>
+  <script src="assets/js/data.js"></script>
+  <script src="assets/js/app.js"></script>
 </body>
 </html>
