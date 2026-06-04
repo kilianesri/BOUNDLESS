@@ -370,19 +370,105 @@ window.BOUNDLESS = window.BOUNDLESS || {};
   }
 
   // ============================================================
-  //  ITINERARI (document tipus PDF, rèplica de la plantilla)
+  //  ITINERARI — configurador + document (rèplica plantilla PDF)
   // ============================================================
+  function defaultItinCfg() {
+    const d = db.itinerary_defaults || BOUNDLESS.seed.itinerary_defaults;
+    return { title: d.title, subtitle: d.subtitle, intro: d.intro.slice(),
+      included: d.included.slice(), notIncluded: d.notIncluded.slice(),
+      describedIds: d.describedIds.slice(), pricedIds: d.pricedIds.slice(),
+      margin: d.margin, cover: true };
+  }
+
   function viewItinerary() {
-    const doc = BOUNDLESS.itineraryHTML(db.products, { margin: 0.30 });
+    if (!db.itineraryConfig) db.itineraryConfig = defaultItinCfg();
+    const cfg = db.itineraryConfig;
+
+    const optRows = db.products.map(p => {
+      const pa = p.cost_adult == null ? '[per definir]' : eur(economy.pvp(p.cost_adult, cfg.margin));
+      const desc = cfg.describedIds.includes(p.id) ? 'checked' : '';
+      const pric = cfg.pricedIds.includes(p.id) ? 'checked' : '';
+      return `<tr>
+        <td>${esc(p.name)} <span class="badge ${p.zone==='Sud'?'tag':'lang'}">${p.zone}</span></td>
+        <td class="nowrap">${pa}</td>
+        <td class="center"><input type="checkbox" class="ck-desc" data-id="${p.id}" ${desc}></td>
+        <td class="center"><input type="checkbox" class="ck-price" data-id="${p.id}" ${pric}></td>
+      </tr>`;
+    }).join('');
+
     shell('proposals', `
       <div class="it-toolbar no-print">
         <div><a href="#/proposals" class="muted">‹ Propostes</a>
-          <h1 style="font-size:24px;margin-top:2px">Itinerari — Northern Morocco</h1>
-          <div class="sub">Rèplica de la plantilla · logos Boundless Life · aethnic · weroots · preus de la Tarifa Nord actual (30%)</div></div>
-        <button class="btn" id="printit">⬇ Descarregar / Imprimir PDF</button>
+          <h1 style="font-size:24px;margin-top:2px">Configurador d'itineraris</h1>
+          <div class="sub">Parteix de la base de preus · els imports es calculen amb cost × (1 + marge)</div></div>
+        <div style="display:flex;gap:8px">
+          <button class="btn ghost" id="resetit">↺ Restablir plantilla</button>
+          <button class="btn" id="printit">⬇ Imprimir / PDF</button>
+        </div>
       </div>
-      ${doc}`);
+
+      <div class="card no-print" style="margin-bottom:18px">
+        <div class="row">
+          <div class="field"><label>Títol</label><input id="i-title" value="${esc(cfg.title)}"></div>
+          <div class="field"><label>Subtítol</label><input id="i-sub" value="${esc(cfg.subtitle)}"></div>
+          <div class="field" style="max-width:160px"><label>Marge X</label>
+            <select id="i-margin">
+              <option value="0.30" ${cfg.margin==0.30?'selected':''}>30%</option>
+              <option value="0.35" ${cfg.margin==0.35?'selected':''}>35%</option>
+              <option value="0.40" ${cfg.margin==0.40?'selected':''}>40%</option>
+            </select></div>
+          <div class="field" style="max-width:120px"><label>Portada</label>
+            <select id="i-cover"><option value="1" ${cfg.cover!==false?'selected':''}>Amb foto</option><option value="0" ${cfg.cover===false?'selected':''}>Sense</option></select></div>
+        </div>
+        <div class="field"><label>Introducció (un paràgraf per línia)</label>
+          <textarea id="i-intro" rows="4">${esc(cfg.intro.join('\n'))}</textarea></div>
+
+        <label style="font-weight:600;font-size:13px;display:block;margin:6px 0 4px">Opcions del viatge (de la base de preus)</label>
+        <table class="tbl" style="margin-bottom:12px"><thead><tr>
+          <th>Producte</th><th>PVP adult</th><th class="center">Descriure</th><th class="center">A la taula de preus</th>
+        </tr></thead><tbody>${optRows}</tbody></table>
+
+        <div class="row">
+          <div class="field"><label>Inclou (una línia per ítem)</label>
+            <textarea id="i-incl" rows="5">${esc(cfg.included.join('\n'))}</textarea></div>
+          <div class="field"><label>No inclou</label>
+            <textarea id="i-excl" rows="5">${esc(cfg.notIncluded.join('\n'))}</textarea></div>
+        </div>
+        <div class="muted" style="font-size:12.5px">Els canvis es desen i es reflecteixen a la vista prèvia de sota a l'instant.</div>
+      </div>
+
+      <div id="itin-preview"></div>`);
+
+    const lines = (s) => s.split('\n').map(x => x.trim()).filter(Boolean);
+    function syncFromForm() {
+      cfg.title = $('#i-title').value;
+      cfg.subtitle = $('#i-sub').value;
+      cfg.margin = parseFloat($('#i-margin').value);
+      cfg.cover = $('#i-cover').value === '1';
+      cfg.intro = lines($('#i-intro').value);
+      cfg.included = lines($('#i-incl').value);
+      cfg.notIncluded = lines($('#i-excl').value);
+      cfg.describedIds = $$('.ck-desc').filter(c => c.checked).map(c => c.dataset.id);
+      cfg.pricedIds = $$('.ck-price').filter(c => c.checked).map(c => c.dataset.id);
+      saveDB();
+    }
+    function renderPreview() {
+      $('#itin-preview').innerHTML = BOUNDLESS.itineraryHTML({
+        products: db.products, content: db.itinerary_content,
+        title: cfg.title, subtitle: cfg.subtitle, intro: cfg.intro, cover: cfg.cover,
+        margin: cfg.margin, describedIds: cfg.describedIds, pricedIds: cfg.pricedIds,
+        included: cfg.included, notIncluded: cfg.notIncluded,
+      });
+    }
+    // text inputs: update preview sense reconstruir el formulari (manté el focus)
+    ['i-title','i-sub','i-intro','i-incl','i-excl'].forEach(id => $('#'+id).addEventListener('input', () => { syncFromForm(); renderPreview(); }));
+    // canvis estructurals: refresca la taula de PVP (marge) i les caselles
+    $('#i-margin').addEventListener('change', () => { syncFromForm(); viewItinerary(); });
+    $('#i-cover').addEventListener('change', () => { syncFromForm(); renderPreview(); });
+    $$('.ck-desc, .ck-price').forEach(c => c.addEventListener('change', () => { syncFromForm(); renderPreview(); }));
+    $('#resetit').onclick = () => { db.itineraryConfig = defaultItinCfg(); saveDB(); viewItinerary(); toast('Plantilla restablerta'); };
     $('#printit').onclick = () => window.print();
+    renderPreview();
   }
 
   // ============================================================

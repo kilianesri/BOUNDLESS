@@ -1,25 +1,30 @@
 /* ============================================================
-   BOUNDLESS — Generador d'itinerari (rèplica de la plantilla PDF)
-   "Northern Morocco — Multioption (1 to 3 days)"
-   Logos: Boundless Life · aethnic · weroots
-   Preus: derivats de la Tarifa Nord actual (cost × 1,30), NO
-   els preus obsolets de l'exemple (regla del kickoff).
+   BOUNDLESS — Generador d'itinerari CONFIGURABLE
+   Dirigit per dades: parteix de la base de preus (products) i
+   d'un objecte de configuració. Replica la plantilla PDF
+   (Boundless Life · aethnic · weroots, bandes terracota, taula).
+   Preus = cost de la base × (1 + marge). Sud = [per definir].
    ============================================================ */
 window.BOUNDLESS = window.BOUNDLESS || {};
 
-BOUNDLESS.itineraryHTML = function (products, opts) {
-  opts = opts || {};
-  const margin = opts.margin != null ? opts.margin : 0.30;
+BOUNDLESS.itineraryHTML = function (cfg) {
+  cfg = cfg || {};
+  const products = cfg.products || [];
+  const content = cfg.content || {};
+  const margin = cfg.margin != null ? cfg.margin : 0.30;
   const eur = BOUNDLESS.eur;
-  const pvp = (id, who) => {
-    const p = (products || []).find(x => x.id === id);
-    if (!p) return '—';
+  const esc = (s) => String(s == null ? '' : s).replace(/[&<>]/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;' }[c]));
+
+  const prod = (id) => products.find(p => p.id === id);
+  const pvp = (p, who) => {
     const base = who === 'child' ? p.cost_child : p.cost_adult;
     if (base == null) return '[per definir]';
     return eur(BOUNDLESS.economy.pvp(base, margin));
   };
-  const ck = '<span class="ck">✔</span>';
-  const dash = '–';
+  const hasWorkshop = (p) => /workshop|chefchaouen|chaouen/i.test(p.name + ' ' + (p.includes || []).join(' '));
+  const activitiesFor = (p) => (content[p.id] && content[p.id].activities) || p.includes || [];
+  const accFor = (p) => (content[p.id] && content[p.id].accommodation) || null;
+  const accNote = (p) => (content[p.id] && content[p.id].acc_note) || 'Accommodation (if requested):';
 
   const logos = `
     <div class="it-logos">
@@ -28,117 +33,83 @@ BOUNDLESS.itineraryHTML = function (products, opts) {
       <img src="assets/img/logo-weroots.jpg" alt="weroots">
     </div>`;
 
-  // ---------- Pàgina 1 — portada ----------
-  const page1 = `
+  const describedIds = (cfg.describedIds || []).filter(id => prod(id));
+  const pricedIds = (cfg.pricedIds || []).filter(id => prod(id));
+  const intro = cfg.intro || [];
+  const included = cfg.included || [];
+  const notIncluded = cfg.notIncluded || [];
+
+  // ----- pàgines: portada + (opcions, 2 per full) + preus/inclou -----
+  const optionPages = [];
+  for (let i = 0; i < describedIds.length; i += 2) optionPages.push(describedIds.slice(i, i + 2));
+  const hasPricing = pricedIds.length > 0;
+  const totalPages = 1 + optionPages.length + (hasPricing ? 1 : 0);
+  let pageNo = 0;
+  const num = () => `<div class="it-pagenum">${++pageNo} / ${totalPages}</div>`;
+
+  // Portada
+  const cover = `
     <section class="it-page">
       <div class="it-band-top"></div>
       ${logos}
-      <h1 class="it-title">Northern Morocco</h1>
-      <div class="it-sub">Medinas and markets, traditions and culture.</div>
-      <div class="it-intro">
-        <p>This exclusive program is specially designed for Boundless Life families seeking
-        enriching, educational, and authentic cultural experiences during their stay in Morocco.</p>
-        <p>Supported by Aethnic, an organization dedicated to responsible tourism, this set of day
-        trip experiences offers a unique way to explore the north of Morocco — combining guided
-        tours, local community encounters, and immersive cultural workshops.</p>
-        <p>Ideal for families with children, these excursions are led by expert cultural guides
-        sensitive to the needs and rhythm of family travel. Each experience allows for meaningful
-        moments of discovery, hands-on participation, and connection with Moroccan life.</p>
-      </div>
-      <img class="it-cover-img" src="assets/img/cover-morocco.jpg" alt="Northern Morocco">
-      <div class="it-pagenum">1 / 3</div>
+      <h1 class="it-title">${esc(cfg.title || 'Itinerari')}</h1>
+      ${cfg.subtitle ? `<div class="it-sub">${esc(cfg.subtitle)}</div>` : ''}
+      <div class="it-intro">${intro.map(p => `<p>${esc(p)}</p>`).join('')}</div>
+      ${cfg.cover !== false ? `<img class="it-cover-img" src="assets/img/cover-morocco.jpg" alt="${esc(cfg.title || '')}">` : ''}
+      ${num()}
       <div class="it-band-bottom"></div>
     </section>`;
 
-  // ---------- Pàgina 2 — opcions 1 i 2 ----------
-  const page2 = `
+  // Opcions
+  const optionSection = (id, idx) => {
+    const p = prod(id);
+    const acts = activitiesFor(p);
+    const acc = accFor(p);
+    return `
+      <div class="it-opt">Option ${idx + 1}: <span>${esc(p.name)}</span></div>
+      <div class="it-lead">Activities:</div>
+      <ul class="it-ul sub">${acts.map(a => `<li>${esc(a)}</li>`).join('')}</ul>
+      ${acc ? `<div class="it-lead">${esc(accNote(p))}</div>
+        <ul class="it-ul">${acc.map(a => `<li>${esc(a)}</li>`).join('')}</ul>`
+        : `<div class="it-lead">${esc(accNote(p))}</div>
+        <ul class="it-ul"><li class="muted">[a confirmar]</li></ul>`}`;
+  };
+  let optIdx = 0;
+  const optPagesHtml = optionPages.map((page, pi) => `
     <section class="it-page">
       <div class="it-band-top"></div>
       ${logos}
-      <div class="it-h2">TRIP OPTIONS:</div>
-
-      <div class="it-opt">Option 1: <span>Day Trip Tangier</span></div>
-      <div class="it-lead">Activities:</div>
-      <ul class="it-ul sub">
-        <li>Guided walking tour through the historical city center</li>
-        <li>Visit to Cape Spartel and the Caves of Hercules</li>
-        <li>Camel ride along the Atlantic coast</li>
-        <li>Visits to key museums and the vibrant medina</li>
-      </ul>
-      <div class="it-lead">Accommodation options:</div>
-      <ul class="it-ul">
-        <li>Grand Hotel Ville France ★★★★</li>
-        <li>Kasba Blanca Riad ★★★</li>
-      </ul>
-
-      <div class="it-opt">Option 2: <span>Day Trip Chefchaouen + Rural Cooperative Workshop</span></div>
-      <div class="it-lead">Activities:</div>
-      <ul class="it-ul sub">
-        <li>Private transport to Chefchaouen, the &ldquo;Blue City&rdquo;</li>
-        <li>Guided walking tour through the medina and historical sites</li>
-        <li>Hands-on workshop with a rural cooperative: choice of textile craft or traditional cooking</li>
-        <li>Free time to explore artisan markets or relax in the town&rsquo;s scenic squares</li>
-      </ul>
-      <div class="it-lead">Accommodation (if overnight stay is requested):</div>
-      <ul class="it-ul">
-        <li>Rural house hosted by a cooperative in the Rif Mountains</li>
-        <li>Local riad in Chefchaouen</li>
-      </ul>
-      <div class="it-pagenum">2 / 3</div>
+      ${pi === 0 ? '<div class="it-h2">TRIP OPTIONS:</div>' : ''}
+      ${page.map(id => optionSection(id, optIdx++)).join('')}
+      ${num()}
       <div class="it-band-bottom"></div>
-    </section>`;
+    </section>`).join('');
 
-  // ---------- Pàgina 3 — opció 3 + preus + inclou ----------
-  const page3 = `
+  // Preus + inclou
+  const pricingRow = (id) => {
+    const p = prod(id);
+    const dur = p.days + (p.days === 1 ? ' day' : ' days');
+    const ck = '<span class="ck">✔</span>';
+    return `<tr><td>${esc(p.name)}</td><td>${dur}</td><td>${ck}</td>
+      <td>${hasWorkshop(p) ? ck : '–'}</td><td>${pvp(p, 'adult')}</td><td>${pvp(p, 'child')}</td></tr>`;
+  };
+  const pricingPage = !hasPricing ? '' : `
     <section class="it-page">
       <div class="it-band-top"></div>
       ${logos}
-      <div class="it-opt">Option 3: <span>Day Trip Tetouan</span></div>
-      <div class="it-lead">Activities:</div>
-      <ul class="it-ul sub">
-        <li>Guided visit through the UNESCO-listed medina of Tetouan</li>
-        <li>Walk through craft districts and artisan quarters</li>
-        <li>Visit to the Ethnographic Museum</li>
-        <li>Free time in Hassan II Square and local souks</li>
-      </ul>
-      <div class="it-lead">Accommodation (if overnight stay is requested):</div>
-      <ul class="it-ul">
-        <li>Riad Blanco Boutique Hotel ★★★</li>
-        <li>Hotel Prestige ★★★★</li>
-      </ul>
-
       <div class="it-section-h">Indicative Pricing Comparison:</div>
       <table class="it-pricing">
-        <thead><tr>
-          <th>Option</th><th>Duration</th><th>Includes<br>Transport + Guide</th>
-          <th>Workshop</th><th>Adult (€)</th><th>Child (€)</th>
-        </tr></thead>
-        <tbody>
-          <tr><td>Day Trip Tangier</td><td>1 day</td><td>${ck}</td><td>${dash}</td><td>${pvp('p1','adult')}</td><td>${pvp('p1','child')}</td></tr>
-          <tr><td>Day Trip Chaouen + Workshop</td><td>1 day</td><td>${ck}</td><td>${ck}</td><td>${pvp('p2','adult')}</td><td>${pvp('p2','child')}</td></tr>
-          <tr><td>Day Trip Tetouan</td><td>1 day</td><td>${ck}</td><td>${dash}</td><td>${pvp('p3','adult')}</td><td>${pvp('p3','child')}</td></tr>
-          <tr><td>2-Day Combo (Tangier + Chaouen)</td><td>2 days</td><td>${ck}</td><td>${ck}</td><td>${pvp('p5','adult')}</td><td>${pvp('p5','child')}</td></tr>
-          <tr><td>3-Day Combo (All 3 trips)</td><td>3 days</td><td>${ck}</td><td>${ck}</td><td>${pvp('p6','adult')}</td><td>${pvp('p6','child')}</td></tr>
-        </tbody>
+        <thead><tr><th>Option</th><th>Duration</th><th>Includes<br>Transport + Guide</th>
+          <th>Workshop</th><th>Adult (€)</th><th>Child (€)</th></tr></thead>
+        <tbody>${pricedIds.map(pricingRow).join('')}</tbody>
       </table>
-
-      <div class="it-note">included in the price:</div>
-      <ul class="it-ul">
-        <li>Private transport with driver</li>
-        <li>Cultural guide throughout the experience</li>
-        <li>Listed activities and entrance fees</li>
-        <li>Basic travel insurance</li>
-        <li>Local tourist taxes</li>
-      </ul>
-      <div class="it-note">Not included:</div>
-      <ul class="it-ul">
-        <li>Meals and drinks (unless specified)</li>
-        <li>Tips and personal expenses</li>
-        <li>Anything not listed under &ldquo;Included&rdquo;</li>
-      </ul>
-      <div class="it-pagenum">3 / 3</div>
+      ${included.length ? `<div class="it-note">included in the price:</div>
+        <ul class="it-ul">${included.map(i => `<li>${esc(i)}</li>`).join('')}</ul>` : ''}
+      ${notIncluded.length ? `<div class="it-note">Not included:</div>
+        <ul class="it-ul">${notIncluded.map(i => `<li>${esc(i)}</li>`).join('')}</ul>` : ''}
+      ${num()}
       <div class="it-band-bottom"></div>
     </section>`;
 
-  return `<div class="itinerary-doc">${page1}${page2}${page3}</div>`;
+  return `<div class="itinerary-doc">${cover}${optPagesHtml}${pricingPage}</div>`;
 };

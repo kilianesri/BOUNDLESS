@@ -148,6 +148,49 @@ BOUNDLESS.seed = {
     { code: 'BLF-2026-DEMO', family: 'Demo (qualsevol família)', email: '—', expires: '2026-12-31', active: true },
   ],
 
+  // ---- Contingut base per a l'itinerari (editable; activitats/allotjament per opció) ----
+  itinerary_content: {
+    p1: { activities: [
+        'Guided walking tour through the historical city center',
+        'Visit to Cape Spartel and the Caves of Hercules',
+        'Camel ride along the Atlantic coast',
+        'Visits to key museums and the vibrant medina' ],
+      acc_note: 'Accommodation options:',
+      accommodation: ['Grand Hotel Ville France ★★★★', 'Kasba Blanca Riad ★★★'] },
+    p2: { activities: [
+        'Private transport to Chefchaouen, the “Blue City”',
+        'Guided walking tour through the medina and historical sites',
+        'Hands-on workshop with a rural cooperative: choice of textile craft or traditional cooking',
+        'Free time to explore artisan markets or relax in the town’s scenic squares' ],
+      acc_note: 'Accommodation (if overnight stay is requested):',
+      accommodation: ['Rural house hosted by a cooperative in the Rif Mountains', 'Local riad in Chefchaouen'] },
+    p3: { activities: [
+        'Guided visit through the UNESCO-listed medina of Tetouan',
+        'Walk through craft districts and artisan quarters',
+        'Visit to the Ethnographic Museum',
+        'Free time in Hassan II Square and local souks' ],
+      acc_note: 'Accommodation (if overnight stay is requested):',
+      accommodation: ['Riad Blanco Boutique Hotel ★★★', 'Hotel Prestige ★★★★'] },
+  },
+
+  // ---- Llistes per defecte de l'itinerari ----
+  itinerary_defaults: {
+    title: 'Northern Morocco',
+    subtitle: 'Medinas and markets, traditions and culture.',
+    intro: [
+      'This exclusive program is specially designed for Boundless Life families seeking enriching, educational, and authentic cultural experiences during their stay in Morocco.',
+      'Supported by Aethnic, an organization dedicated to responsible tourism, this set of day trip experiences offers a unique way to explore the north of Morocco — combining guided tours, local community encounters, and immersive cultural workshops.',
+      'Ideal for families with children, these excursions are led by expert cultural guides sensitive to the needs and rhythm of family travel. Each experience allows for meaningful moments of discovery, hands-on participation, and connection with Moroccan life.'
+    ],
+    included: ['Private transport with driver', 'Cultural guide throughout the experience',
+      'Listed activities and entrance fees', 'Basic travel insurance', 'Local tourist taxes'],
+    notIncluded: ['Meals and drinks (unless specified)', 'Tips and personal expenses',
+      'Anything not listed under “Included”'],
+    describedIds: ['p1', 'p2', 'p3'],
+    pricedIds: ['p1', 'p2', 'p3', 'p5', 'p6'],
+    margin: 0.30,
+  },
+
   // ---- Equip (demo, sense contrasenyes reals) ----
   users: [
     { name: 'Kilian Estivill', email: 'demo-admin@boundless.test', role: 'admin' },
