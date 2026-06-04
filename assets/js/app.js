@@ -70,6 +70,7 @@ window.BOUNDLESS = window.BOUNDLESS || {};
       case 'lead': return viewLeadDetail(parts[1]);
       case 'gmail': return viewGmail();
       case 'proposals': return parts[1] === 'new' ? viewGenerator(parts[2]) : viewProposals();
+      case 'itinerary': return viewItinerary();
       case 'suppliers': return viewSuppliers();
       case 'tarifes': return viewTarifes();
       default: return viewDashboard();
@@ -356,13 +357,30 @@ window.BOUNDLESS = window.BOUNDLESS || {};
 
     shell('proposals', `
       <div class="page-head"><div><h1>Propostes</h1><div class="sub">Propostes de viatge generades · PDF CA/ES/EN</div></div>
-        <button class="btn" id="newprop">+ Nova proposta</button></div>
+        <div style="display:flex;gap:8px"><a href="#/itinerary" class="btn ghost">📄 Itinerari (plantilla PDF)</a>
+        <button class="btn" id="newprop">+ Nova proposta</button></div></div>
       <div class="card"><table class="tbl">
         <thead><tr><th>Ref</th><th>Lead</th><th>Producte</th><th>Pax</th><th>Marge</th><th>PVP</th><th>Idioma</th><th>Data</th></tr></thead>
         <tbody>${rows || '<tr><td colspan="8" class="center muted">Cap proposta encara</td></tr>'}</tbody></table></div>`);
 
     $('#newprop').onclick = () => go('#/proposals/new');
     $$('tr[data-id]').forEach(r => r.onclick = () => { const pr = db.proposals.find(x=>x.id===r.dataset.id); go('#/proposals/new/' + (pr.lead_ref||'')); });
+  }
+
+  // ============================================================
+  //  ITINERARI (document tipus PDF, rèplica de la plantilla)
+  // ============================================================
+  function viewItinerary() {
+    const doc = BOUNDLESS.itineraryHTML(db.products, { margin: 0.30 });
+    shell('proposals', `
+      <div class="it-toolbar no-print">
+        <div><a href="#/proposals" class="muted">‹ Propostes</a>
+          <h1 style="font-size:24px;margin-top:2px">Itinerari — Northern Morocco</h1>
+          <div class="sub">Rèplica de la plantilla · logos Boundless Life · aethnic · weroots · preus de la Tarifa Nord actual (30%)</div></div>
+        <button class="btn" id="printit">⬇ Descarregar / Imprimir PDF</button>
+      </div>
+      ${doc}`);
+    $('#printit').onclick = () => window.print();
   }
 
   // ============================================================
@@ -387,6 +405,7 @@ window.BOUNDLESS = window.BOUNDLESS || {};
             <div class="field"><label>Idioma</label><select id="g-lang"><option>CA</option><option ${l&&l.lang==='ES'?'selected':''}>ES</option><option ${l&&l.lang==='EN'?'selected':''}>EN</option></select></div>
           </div>
           <button class="btn block" id="g-pdf">⬇ Exportar PDF</button>
+          <a href="#/itinerary" class="btn ghost block" style="margin-top:8px">📄 Veure itinerari complet (plantilla PDF)</a>
           <div class="demo-hint">El PDF real (server-side) es genera a la <b>Fase 3</b>. Aquí en veus la vista prèvia.</div>
         </div>
         <div id="prop-preview"></div>
