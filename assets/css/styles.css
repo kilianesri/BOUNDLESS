@@ -87,7 +87,9 @@ input, select, textarea { font-family: inherit; font-size: 14px; }
 }
 .nav a:hover { background: var(--sand); color: var(--ink); }
 .nav a.active { background: var(--clay); color: #fff; }
-.topbar .user { display: flex; align-items: center; gap: 10px; font-size: 13px; }
+.topbar .user { display: flex; align-items: center; gap: 12px; font-size: 13px; }
+.topbar .brandby { height: 26px; width: auto; opacity: .92; }
+@media (max-width: 720px){ .topbar .brandby { display: none; } }
 .avatar {
   width: 32px; height: 32px; border-radius: 50%; background: var(--olive); color: #fff;
   display: grid; place-items: center; font-weight: 700; font-size: 13px;
@@ -217,6 +219,9 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 14px; }
 .auth-card .tagline { text-align: center; color: var(--muted); margin-bottom: 22px; font-size: 14px; }
 .auth-switch { text-align: center; margin-top: 16px; font-size: 13px; }
 .demo-hint { background: var(--sand); border: 1px dashed var(--line); border-radius: var(--radius-sm); padding: 10px 12px; font-size: 12.5px; color: var(--muted); margin-top: 14px; }
+.auth-by { display: flex; flex-direction: column; align-items: center; gap: 6px; margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--line); }
+.auth-by span { font-size: 10.5px; color: var(--muted); letter-spacing: .08em; text-transform: uppercase; }
+.auth-by img { height: 34px; width: auto; }
 
 .wizard-steps { display: flex; gap: 8px; margin-bottom: 22px; }
 .wizard-steps .ws { flex: 1; height: 5px; border-radius: 999px; background: var(--line); }

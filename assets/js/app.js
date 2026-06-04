@@ -90,6 +90,7 @@ window.BOUNDLESS = window.BOUNDLESS || {};
         <div class="logo"><span class="glyph">◈</span> BOUNDLESS</div>
         <nav class="nav">${nav}</nav>
         <div class="user">
+          <img class="brandby" src="assets/img/logo-aethnic.png" alt="aethnic" title="Una eina d'AETHNIC">
           <a href="#/portal" class="btn ghost sm">Portal client ↗</a>
           <div class="avatar">KE</div>
           <a href="#" id="logout" class="muted">Sortir</a>
@@ -115,6 +116,7 @@ window.BOUNDLESS = window.BOUNDLESS || {};
         <button class="btn block" id="loginbtn">Entrar</button>
         <div class="demo-hint">🔐 <b>Demo:</b> qualsevol credencial entra. El login real amb hash de contrasenya arriba a la Fase 1.</div>
         <div class="auth-switch">Ets família de Boundless Life? <a href="#/portal">Entra al portal de client →</a></div>
+        <div class="auth-by"><span>Una eina d'</span><img src="assets/img/logo-aethnic.png" alt="aethnic"></div>
       </div></div>`;
     const enter = () => { session.team = true; go('#/dashboard'); };
     $('#loginbtn').onclick = enter;
@@ -503,6 +505,7 @@ window.BOUNDLESS = window.BOUNDLESS || {};
         <button class="btn block" id="enter">Començar la meva petició</button>
         <div class="demo-hint">L'equip et facilita un codi (caducable / d'un sol ús). Demo: <b>BLF-2026-DEMO</b>.</div>
         <div class="auth-switch">Ets de l'equip? <a href="#/dashboard">Àrea privada →</a></div>
+        <div class="auth-by"><span>Amb el suport d'</span><img src="assets/img/logo-aethnic.png" alt="aethnic"></div>
       </div></div>`;
     $('#enter').onclick = () => {
       const code = $('#code').value.trim();
