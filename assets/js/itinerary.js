@@ -22,9 +22,10 @@ BOUNDLESS.itineraryHTML = function (cfg) {
     return eur(BOUNDLESS.economy.pvp(base, margin));
   };
   const hasWorkshop = (p) => /workshop|chefchaouen|chaouen/i.test(p.name + ' ' + (p.includes || []).join(' '));
-  const activitiesFor = (p) => (content[p.id] && content[p.id].activities) || p.includes || [];
-  const accFor = (p) => (content[p.id] && content[p.id].accommodation) || null;
-  const accNote = (p) => (content[p.id] && content[p.id].acc_note) || 'Accommodation (if requested):';
+  const c = (id) => content[id] || {};
+  const activitiesFor = (p) => (c(p.id).activities && c(p.id).activities.length) ? c(p.id).activities : (p.includes || []);
+  const accFor = (p) => (c(p.id).accommodation && c(p.id).accommodation.length) ? c(p.id).accommodation : null;
+  const accNote = (p) => c(p.id).acc_note || 'Accommodation (if requested):';
 
   const logos = `
     <div class="it-logos">

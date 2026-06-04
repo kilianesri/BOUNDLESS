@@ -383,6 +383,31 @@ window.BOUNDLESS = window.BOUNDLESS || {};
   function viewItinerary() {
     if (!db.itineraryConfig) db.itineraryConfig = defaultItinCfg();
     const cfg = db.itineraryConfig;
+    if (!cfg.content) cfg.content = {};
+
+    // Inicialitza el contingut editable de cada opció descrita (des de la base si existeix)
+    cfg.describedIds.forEach(id => {
+      if (cfg.content[id]) return;
+      const base = (db.itinerary_content || {})[id];
+      const p = product(id);
+      cfg.content[id] = base
+        ? { activities: base.activities.slice(), accommodation: base.accommodation.slice(), acc_note: base.acc_note }
+        : { activities: (p && p.includes ? p.includes.slice() : []), accommodation: [], acc_note: 'Accommodation (if requested):' };
+    });
+
+    const optEditors = cfg.describedIds.map(id => {
+      const p = product(id); if (!p) return '';
+      const oc = cfg.content[id];
+      return `<div class="card" style="background:var(--sand);margin-bottom:10px;padding:14px">
+        <b>${esc(p.name)}</b>
+        <div class="field" style="margin-top:8px"><label>Activitats (una per línia)</label>
+          <textarea class="oc-act" data-id="${id}" rows="4">${esc(oc.activities.join('\n'))}</textarea></div>
+        <div class="field"><label>Títol del bloc d'allotjament</label>
+          <input class="oc-note" data-id="${id}" value="${esc(oc.acc_note||'')}"></div>
+        <div class="field" style="margin-bottom:0"><label>Allotjament (una per línia)</label>
+          <textarea class="oc-acc" data-id="${id}" rows="2">${esc(oc.accommodation.join('\n'))}</textarea></div>
+      </div>`;
+    }).join('');
 
     const optRows = db.products.map(p => {
       const pa = p.cost_adult == null ? '[per definir]' : eur(economy.pvp(p.cost_adult, cfg.margin));
@@ -428,6 +453,8 @@ window.BOUNDLESS = window.BOUNDLESS || {};
           <th>Producte</th><th>PVP adult</th><th class="center">Descriure</th><th class="center">A la taula de preus</th>
         </tr></thead><tbody>${optRows}</tbody></table>
 
+        ${cfg.describedIds.length ? `<label style="font-weight:600;font-size:13px;display:block;margin:10px 0 6px">Contingut de les opcions descrites</label>${optEditors}` : ''}
+
         <div class="row">
           <div class="field"><label>Inclou (una línia per ítem)</label>
             <textarea id="i-incl" rows="5">${esc(cfg.included.join('\n'))}</textarea></div>
@@ -454,7 +481,7 @@ window.BOUNDLESS = window.BOUNDLESS || {};
     }
     function renderPreview() {
       $('#itin-preview').innerHTML = BOUNDLESS.itineraryHTML({
-        products: db.products, content: db.itinerary_content,
+        products: db.products, content: cfg.content,
         title: cfg.title, subtitle: cfg.subtitle, intro: cfg.intro, cover: cfg.cover,
         margin: cfg.margin, describedIds: cfg.describedIds, pricedIds: cfg.pricedIds,
         included: cfg.included, notIncluded: cfg.notIncluded,
@@ -465,7 +492,12 @@ window.BOUNDLESS = window.BOUNDLESS || {};
     // canvis estructurals: refresca la taula de PVP (marge) i les caselles
     $('#i-margin').addEventListener('change', () => { syncFromForm(); viewItinerary(); });
     $('#i-cover').addEventListener('change', () => { syncFromForm(); renderPreview(); });
-    $$('.ck-desc, .ck-price').forEach(c => c.addEventListener('change', () => { syncFromForm(); renderPreview(); }));
+    // descriure/preu: pot afegir o treure editors d'opció -> reconstrueix el formulari
+    $$('.ck-desc, .ck-price').forEach(c => c.addEventListener('change', () => { syncFromForm(); viewItinerary(); }));
+    // edició del contingut per opció (manté el focus, només refresca la previsualització)
+    $$('.oc-act').forEach(t => t.addEventListener('input', () => { cfg.content[t.dataset.id].activities = lines(t.value); saveDB(); renderPreview(); }));
+    $$('.oc-acc').forEach(t => t.addEventListener('input', () => { cfg.content[t.dataset.id].accommodation = lines(t.value); saveDB(); renderPreview(); }));
+    $$('.oc-note').forEach(t => t.addEventListener('input', () => { cfg.content[t.dataset.id].acc_note = t.value; saveDB(); renderPreview(); }));
     $('#resetit').onclick = () => { db.itineraryConfig = defaultItinCfg(); saveDB(); viewItinerary(); toast('Plantilla restablerta'); };
     $('#printit').onclick = () => window.print();
     renderPreview();
